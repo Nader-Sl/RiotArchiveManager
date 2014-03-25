@@ -11,6 +11,8 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.nadersl.riotarchivemanager.util.Compression;
@@ -27,6 +29,8 @@ public class RiotArchive {
     private String magicN;
     private int versionN, managerIdx, entriesInfoTableOff, stringsTableOff, entriesInfoCount;
     private HashMap<String, RiotEntry> entries = new HashMap<>();
+    private final static Logger LOGGER = Logger.getLogger(RiotArchive.class.getName());
+    public static boolean VERBOSE;
 
     public RiotArchive(final String name, final String rafName, final String rafDatName) {
         this.name = name;
@@ -95,7 +99,9 @@ public class RiotArchive {
                 String entryPath = new String(pathData, "UTF-8");//convert pathData to a path string.
                 RiotEntry riotEntry = new RiotEntry(entryPath, entryPathHash, entryOff, entrySize);
                 putRiotEntry(entryPath, riotEntry);
-
+                if (RiotArchive.VERBOSE) {
+                    LOGGER.log(Level.INFO, "Stored " + entryPath + " to map");
+                }
             }
 
 
@@ -106,10 +112,6 @@ public class RiotArchive {
             io.printStackTrace();
             return false;
         }
-    }
-
-    public boolean extractAll(final String srcRootPath, final String dstRootPath) {
-        return extract(srcRootPath, dstRootPath, ".");
     }
 
     public void decodeInibins(final String srcRootPath) {
@@ -138,7 +140,7 @@ public class RiotArchive {
 
     }
 
-    public boolean extract(final String srcRootPath, final String dstRootPath, final String regex) {
+    public boolean extract(final String srcRootPath, final String dstRootPath) {
 
         File dstRootDir = new File(dstRootPath + File.separator + name);
         if (!dstRootDir.exists()) {
@@ -147,15 +149,17 @@ public class RiotArchive {
 
         MappedByteBuffer datBuffer = null;
         try {
-            try (RandomAccessFile aFile = new RandomAccessFile(srcRootPath + File.separator + name + File.separator + rafDatName, "r"); 
+            try (RandomAccessFile aFile = new RandomAccessFile(srcRootPath + File.separator + name + File.separator + rafDatName, "r");
                     FileChannel inChannel2 = aFile.getChannel()) {
                 datBuffer = inChannel2.map(FileChannel.MapMode.READ_ONLY, 0, inChannel2.size());
                 datBuffer.order(ByteOrder.LITTLE_ENDIAN);
                 datBuffer.load();
 
             }
-            for (RiotEntry riotEntry : getEntries(regex)) {
-
+            for (RiotEntry riotEntry : getEntries(".")) {
+                if (RiotArchive.VERBOSE) {
+                       LOGGER.log(Level.INFO, "extracted " + riotEntry.getPath()); 
+                }
                 byte rawEntryData[] = new byte[riotEntry.getEntrySize()];
                 datBuffer.position(riotEntry.getEntryOffset());
                 for (int i = 0; i < rawEntryData.length; i++) {

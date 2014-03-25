@@ -5,16 +5,9 @@
 package org.nadersl.riotarchivemanager;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,11 +22,20 @@ public class RiotArchiveManager {
     private String dirs[];
     private final HashMap<String, RiotArchive> archives = new HashMap<>();
     private final static Logger LOGGER = Logger.getLogger(RiotArchiveManager.class.getName());
-    public static final boolean VERBOSE = false;
+    public static boolean VERBOSE;
 
     public RiotArchiveManager(final String sPath, final String... dirs) {
         this.rootPath = sPath;
         this.dirs = dirs;
+    }
+
+    protected void extract(final String dstPath) {
+        for (RiotArchive ra : archives.values()) {
+            if (RiotArchiveManager.VERBOSE) {
+                LOGGER.log(Level.INFO, "Extracted " + ra.getRafName() + " to " + dstPath);
+                ra.extract(rootPath, dstPath);
+            }
+        }
     }
 
     protected void unPack() {
@@ -98,10 +100,8 @@ public class RiotArchiveManager {
                     RiotArchive riotArch = new RiotArchive(archiveDir.getName(), rafName, rafDatName);
                     if (riotArch.unpack(rootPath)) {
                         archives.put(archiveDir.getName(), riotArch);
-//                      riotArch.extractAll(rootPath, "C:\\League of Legends-OLD" + File.separator + "extract");
-                riotArch.decodeInibins(rootPath);
                     } else {
-                        LOGGER.log(Level.SEVERE, "couldn't unpack archive " + archiveDir + File.separator + rafName);
+                        LOGGER.log(Level.SEVERE, "couldn't unpack archive " + archiveDir + "/" + rafName);
                     }
                 }
             }

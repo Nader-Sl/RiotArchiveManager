@@ -6,10 +6,13 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-        
-            //read the Raf file
+
+            /* load the RAF file*/
             RiotArchiveManager rf = new RiotArchiveManager("C:\\League of Legends-OLD\\RADS\\projects\\lol_game_client\\filearchives\\");
+            RiotArchiveManager.VERBOSE = true;
+            //RiotArchive.VERBOSE = true;
             rf.unPack();
+            
             /*Regex search examples:
              * All: "."
              * Ends with an extension: ".*?\\.extension.*"
@@ -19,9 +22,11 @@ public class Main {
              */
             final List<RiotEntry> riotEntries = rf.findEntries(".");
             for (RiotEntry entry : riotEntries) {
-               // do something with entry.
+                //check entries..
             }
             System.out.println("Search yielded : " + riotEntries.size() + " entries");
+
+            rf.extract("C:\\League of Legends-OLD\\RADS\\projects\\lol_game_client\\filearchivesextract\\");
         } catch (Exception io) {
             io.printStackTrace();
         }
